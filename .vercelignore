@@ -1,0 +1,7 @@
+# Unrelated photogrammetry data-processing pipeline (~130MB) — not used by
+# the web_viewer Flask app, and would otherwise bloat the serverless bundle.
+vertical-cadastre/
+
+# Not needed at runtime.
+features.pdf
+README.md
