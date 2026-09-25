@@ -1,0 +1,28 @@
+﻿{
+  "ulpin": "33-012-0087-0348-2026",
+  "location": {
+    "name": "BK Pudur, Sugunapuram / Kuniyamuthur",
+    "city": "Coimbatore",
+    "district": "Coimbatore South",
+    "state": "Tamil Nadu",
+    "pincode": "641008",
+    "latitude": 10.953500,
+    "longitude": 76.963400,
+    "elevation_amsl_m": 421.5
+  },
+  "parcel": {
+    "survey_number": "SF No. 142/3B",
+    "patta_number": "TR-9821/2024",
+    "ward_number": "Ward 87, West Zone",
+    "local_body": "Coimbatore City Municipal Corporation (CCMC)",
+    "area_sqm": 227.6,
+    "area_sqft": 2450.0,
+    "classification": "Nanjai / Residential Plot (R-2)",
+    "vertical_envelope": {
+      "air_rights_limit_m": 12.0,
+      "building_height_m": 8.5,
+      "ground_elevation_m": 0.0,
+      "subsurface_limit_m": -4.0
+    }
+  }
+}

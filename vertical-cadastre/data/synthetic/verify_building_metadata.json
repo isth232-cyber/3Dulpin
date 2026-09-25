@@ -1,0 +1,27 @@
+{
+    "num_points": 50000,
+    "building_dimensions": {
+        "width": 15.0,
+        "depth": 10.0,
+        "height": 6.0
+    },
+    "overall_bounding_box": {
+        "min": [
+            -4.99986158310655,
+            -4.999767304892677,
+            0.0
+        ],
+        "max": [
+            19.99812067082941,
+            14.998019540184632,
+            6.0
+        ],
+        "width": 24.997982253935962,
+        "depth": 19.997786845077307,
+        "height": 6.0
+    },
+    "floors": 2,
+    "floor_height": 3.0,
+    "description": "SYNTHETIC TEST DATA - Not real LiDAR/drone data. Includes ground plane extending beyond building.",
+    "seed": 42
+}

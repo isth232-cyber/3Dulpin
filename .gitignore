@@ -1,0 +1,34 @@
+﻿# Video files
+*.mp4
+*.mov
+*.avi
+
+# Large raw drone datasets & frames
+video_frames/
+combined_frames/
+vertical-cadastre/dataset/
+data/inputs/
+grd floor model/
+
+# Virtual Environment & Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyd
+
+# Tools & Archives
+tools/
+*.zip
+
+# Ignore all intermediate photogrammetry job folders
+vertical-cadastre/data/outputs/photogrammetry/job_*
+# But preserve the required texture maps for final.obj/final.mtl:
+!vertical-cadastre/data/outputs/photogrammetry/job_233d755c/odm_texturing/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

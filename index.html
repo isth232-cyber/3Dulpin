@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>3D Cadastre & Subsurface Utility Portal - BK Pudur, Coimbatore</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- App design system / responsive shell -->
+  <link rel="stylesheet" href="web_viewer/static/css/app.css">
+
+  <!-- Three.js and Loaders -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    #canvas-container { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; z-index: 0; background: #0b0f19; touch-action: none; }
+  </style>
+</head>
+<body class="text-slate-100 antialiased">
+
+  <!-- 3D Canvas -->
+  <div id="canvas-container"></div>
+
+  <!-- Top Header Bar -->
+  <header class="app-header glass">
+    <div class="flex items-center gap-2 min-w-0">
+      <button id="btn-menu" class="icon-btn lg:hidden" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="left-drawer">
+        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+      </button>
+      <div class="brand">
+        <div class="brand-mark"><i class="fa-solid fa-cube" aria-hidden="true"></i></div>
+        <div class="brand-text">
+          <h1>3D ULPIN <span class="brand-sub hidden sm:inline">Subsurface Cadastre</span></h1>
+          <p class="brand-location hidden sm:flex items-center gap-1.5">
+            <i class="fa-solid fa-location-dot text-rose-500" aria-hidden="true"></i>
+            <span>BK Pudur, Coimbatore, TN 641008</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-stats hidden lg:flex">
+      <div class="text-right">
+        <div class="stat-label">ULPIN Identifier</div>
+        <div class="stat-value font-mono" id="stat-ulpin">33-012-0087-0348</div>
+      </div>
+      <div class="divider"></div>
+      <div class="text-right">
+        <div class="stat-label">Parcel Survey No.</div>
+        <div class="stat-value text-amber-400" id="stat-survey">SF No. 142/3B</div>
+      </div>
+      <div class="divider"></div>
+      <div class="text-right">
+        <div class="stat-label">Subsurface Depth</div>
+        <div class="stat-value text-cyan-400" id="stat-depth">-4.0 m Clear</div>
+      </div>
+    </div>
+
+    <button id="btn-info" class="icon-btn lg:hidden" type="button" aria-label="Open property details" aria-expanded="false" aria-controls="right-sheet">
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  <!-- Drawer backdrop (mobile/tablet only) -->
+  <div id="drawer-backdrop"></div>
+
+  <!-- Left Control Panel: off-canvas drawer on mobile/tablet, persistent sidebar on desktop -->
+  <aside id="left-drawer" class="glass custom-scrollbar shadow-2xl" aria-label="Visualization controls">
+    <button id="btn-drawer-close" class="icon-btn drawer-close" type="button" aria-label="Close navigation menu">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+
+    <details class="panel-section" open data-force-open="true">
+      <summary>
+        <span><i class="fa-solid fa-layer-group mr-1.5 text-amber-400" aria-hidden="true"></i>Visualization Mode</span>
+        <i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
+      </summary>
+      <div class="panel-section-body">
+        <div class="mode-grid">
+          <button id="btn-surface-mode" class="mode-btn is-active" type="button" aria-pressed="true">
+            <i class="fa-solid fa-house" aria-hidden="true"></i> Surface View
+          </button>
+          <button id="btn-xray-mode" class="mode-btn" type="button" aria-pressed="false">
+            <i class="fa-solid fa-bone" aria-hidden="true"></i> X-Ray Pipes
+          </button>
+          <button id="btn-cadastre-mode" class="mode-btn" type="button" aria-pressed="false">
+            <i class="fa-solid fa-vector-square" aria-hidden="true"></i> Parcel Prism
+          </button>
+          <button id="btn-top-mode" class="mode-btn" type="button" aria-pressed="false">
+            <i class="fa-solid fa-compass" aria-hidden="true"></i> Top Ortho
+          </button>
+        </div>
+      </div>
+    </details>
+
+    <details class="panel-section" open data-force-open="true">
+      <summary>
+        <span><i class="fa-solid fa-arrows-split-up-and-left mr-1.5 text-cyan-400" aria-hidden="true"></i>Underground Utilities</span>
+        <i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
+      </summary>
+      <div class="panel-section-body">
+        <label class="layer-row">
+          <span class="flex items-center gap-2"><span class="layer-swatch" style="background:#00b4d8; box-shadow:0 0 8px #00b4d8"></span>Potable Water Main & Sump</span>
+          <input type="checkbox" id="layer-water" checked>
+        </label>
+        <label class="layer-row">
+          <span class="flex items-center gap-2"><span class="layer-swatch" style="background:#e76f51; box-shadow:0 0 8px #e76f51"></span>Sanitary Sewer & IC Manholes</span>
+          <input type="checkbox" id="layer-sewer" checked>
+        </label>
+        <label class="layer-row">
+          <span class="flex items-center gap-2"><span class="layer-swatch" style="background:#2a9d8f; box-shadow:0 0 8px #2a9d8f"></span>Roadside Stormwater Drain</span>
+          <input type="checkbox" id="layer-storm" checked>
+        </label>
+        <label class="layer-row">
+          <span class="flex items-center gap-2"><span class="layer-swatch" style="background:#e9c46a; box-shadow:0 0 8px #e9c46a"></span>Underground Electric & Telecom</span>
+          <input type="checkbox" id="layer-power" checked>
+        </label>
+      </div>
+    </details>
+
+    <details class="panel-section" open data-force-open="true">
+      <summary>
+        <span><i class="fa-solid fa-sliders mr-1.5 text-slate-300" aria-hidden="true"></i>Display Adjustments</span>
+        <i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
+      </summary>
+      <div class="panel-section-body">
+        <div class="slider-row">
+          <div class="slider-row-label"><span>Ground / Map Opacity</span><span id="val-ground-opacity" class="font-mono text-white">100%</span></div>
+          <input id="slider-ground-opacity" type="range" min="0" max="100" value="100" aria-label="Ground opacity">
+        </div>
+        <div class="slider-row">
+          <div class="slider-row-label"><span>House Model Opacity</span><span id="val-house-opacity" class="font-mono text-white">100%</span></div>
+          <input id="slider-house-opacity" type="range" min="10" max="100" value="100" aria-label="House model opacity">
+        </div>
+        <div class="slider-row">
+          <div class="slider-row-label"><span>Subsurface Cutoff Depth</span><span id="val-depth-cutoff" class="font-mono text-white">-4.0 m</span></div>
+          <input id="slider-depth-cutoff" type="range" min="-40" max="0" value="-40" aria-label="Subsurface cutoff depth">
+        </div>
+      </div>
+    </details>
+
+    <details class="panel-section" open data-force-open="true">
+      <summary>
+        <span><i class="fa-solid fa-video mr-1.5 text-slate-300" aria-hidden="true"></i>Camera Presets</span>
+        <i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
+      </summary>
+      <div class="panel-section-body">
+        <div class="camera-grid">
+          <button class="camera-btn" type="button" data-camera-view="front"><i class="fa-solid fa-door-open text-amber-400" aria-hidden="true"></i> Front Gate</button>
+          <button class="camera-btn" type="button" data-camera-view="underground"><i class="fa-solid fa-water text-cyan-400" aria-hidden="true"></i> Under Pipes</button>
+          <button class="camera-btn" type="button" data-camera-view="street"><i class="fa-solid fa-road text-slate-400" aria-hidden="true"></i> Street Angle</button>
+          <button class="camera-btn" type="button" data-camera-view="drone"><i class="fa-solid fa-plane-up text-purple-400" aria-hidden="true"></i> Aerial Drone</button>
+        </div>
+      </div>
+    </details>
+  </aside>
+
+  <!-- Right Inspector: bottom sheet on mobile/tablet, persistent panel on desktop -->
+  <aside id="right-sheet" class="glass" aria-label="Property and utility details">
+    <div class="sheet-handle-row" id="sheet-handle" role="button" tabindex="0" aria-expanded="false" aria-controls="sheet-body">
+      <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2 lg:hidden">
+        <i class="fa-solid fa-fingerprint text-amber-400" aria-hidden="true"></i> Property Details
+      </span>
+      <div class="sheet-grabber"></div>
+      <i class="fa-solid fa-chevron-up text-slate-400 lg:hidden" id="sheet-chevron" aria-hidden="true"></i>
+    </div>
+
+    <div class="sheet-body custom-scrollbar" id="sheet-body">
+      <div class="hidden lg:flex items-center justify-between mb-3">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          <i class="fa-solid fa-fingerprint text-amber-400" aria-hidden="true"></i>
+          <span>Cadastral Property Dossier</span>
+        </h2>
+        <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-mono">TN-REV-2026</span>
+      </div>
+
+      <!-- ULPIN Banner -->
+      <div class="bg-gradient-to-r from-amber-500/15 via-slate-800 to-cyan-500/15 border border-slate-700/80 rounded-lg p-3 mb-3">
+        <div class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Unique Land Parcel ID (ULPIN)</div>
+        <div class="text-sm font-mono font-bold text-white tracking-widest mt-0.5" id="ulpin-value">33-012-0087-0348-2026</div>
+        <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
+          <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+          <span>Georeferenced & Verified in Cadastre</span>
+        </div>
+      </div>
+
+      <!-- Metadata Grid -->
+      <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+        <div class="p-2 rounded bg-slate-800/60 border border-slate-800">
+          <div class="text-slate-400 text-[10px]">Survey Number</div>
+          <div class="font-semibold text-white" id="meta-survey">SF No. 142/3B</div>
+        </div>
+        <div class="p-2 rounded bg-slate-800/60 border border-slate-800">
+          <div class="text-slate-400 text-[10px]">Patta / Deed No.</div>
+          <div class="font-semibold text-white" id="meta-patta">TR-9821/2024</div>
+        </div>
+        <div class="p-2 rounded bg-slate-800/60 border border-slate-800">
+          <div class="text-slate-400 text-[10px]">Plot Area</div>
+          <div class="font-semibold text-amber-400" id="meta-area">2,450 sq.ft (227.6 m&sup2;)</div>
+        </div>
+        <div class="p-2 rounded bg-slate-800/60 border border-slate-800">
+          <div class="text-slate-400 text-[10px]">Municipal Ward</div>
+          <div class="font-semibold text-white" id="meta-ward">Ward 87, CCMC West</div>
+        </div>
+        <div class="p-2 rounded bg-slate-800/60 border border-slate-800">
+          <div class="text-slate-400 text-[10px]">Classification</div>
+          <div class="font-semibold text-white" id="meta-classification">Nanjai / Residential (R-2)</div>
+        </div>
+        <div class="p-2 rounded bg-slate-800/60 border border-slate-800">
+          <div class="text-slate-400 text-[10px]">Vertical Envelope</div>
+          <div class="font-semibold text-white" id="meta-envelope">-4.0 m to +12.0 m</div>
+        </div>
+      </div>
+
+      <!-- Subsurface Pipe Details Box (shown after a pipe is selected) -->
+      <div id="pipe-details-box" class="p-3 rounded-lg bg-cyan-950/40 border border-cyan-500/30 hidden">
+        <div class="flex items-center justify-between text-xs text-cyan-300 font-semibold mb-1">
+          <span class="flex items-center gap-1.5">
+            <i class="fa-solid fa-wrench text-cyan-400" aria-hidden="true"></i> Selected Utility Infrastructure
+          </span>
+          <span id="pipe-badge" class="text-[9px] bg-cyan-400 text-slate-950 font-bold px-1.5 py-0.5 rounded">WATER</span>
+        </div>
+        <div id="pipe-name" class="text-xs font-bold text-white">Potable Water Supply Main</div>
+        <div class="mt-2 space-y-1 text-[11px] text-slate-300">
+          <div class="flex justify-between gap-2"><span class="text-slate-400">Depth below ground:</span><span id="pipe-depth" class="font-mono text-cyan-300 text-right">-1.20 m</span></div>
+          <div class="flex justify-between gap-2"><span class="text-slate-400">Nominal Diameter:</span><span id="pipe-dia" class="font-mono text-white text-right">150 mm (6 in)</span></div>
+          <div class="flex justify-between gap-2"><span class="text-slate-400">Material Specification:</span><span id="pipe-mat" class="text-white text-right">Ductile Iron (DI) K9</span></div>
+          <div class="flex justify-between gap-2"><span class="text-slate-400">Operating Authority:</span><span id="pipe-op" class="text-white text-right truncate max-w-[150px]">CCMC Water Works</span></div>
+        </div>
+      </div>
+
+      <!-- Empty state, shown until the visitor selects a pipe -->
+      <div id="pipe-empty-state" class="empty-state border border-dashed border-slate-700 rounded-lg">
+        <i class="fa-solid fa-hand-pointer" aria-hidden="true"></i>
+        <p>No utility selected. Tap or click any underground pipe in the 3D scene to inspect its specifications.</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mini 2D Map: persistent widget on tablet/desktop -->
+  <div id="mini-map-widget" class="glass">
+    <div class="flex items-center justify-between px-1">
+      <span class="text-[11px] font-bold text-white flex items-center gap-1.5">
+        <i class="fa-solid fa-map-location-dot text-rose-500" aria-hidden="true"></i> BK Pudur GIS Location
+      </span>
+      <span class="text-[9px] text-slate-400 font-mono">EPSG:4326</span>
+    </div>
+    <div id="mini-map"></div>
+  </div>
+
+  <!-- Mini map toggle + popover: phones only -->
+  <button id="mini-map-toggle" class="icon-btn glass" type="button" aria-label="Show location map" aria-expanded="false" aria-controls="mini-map-popover">
+    <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+  </button>
+  <div id="mini-map-popover" class="glass">
+    <div class="flex items-center justify-between px-1 mb-1">
+      <span class="text-[11px] font-bold text-white">BK Pudur GIS Location</span>
+      <button id="mini-map-popover-close" class="icon-btn icon-btn-sm" type="button" aria-label="Close map"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <!-- Floating 3D viewer controls -->
+  <div id="fab-controls">
+    <button id="fab-more" class="fab-btn glass" type="button" aria-label="More camera views" aria-expanded="false" aria-controls="more-popover"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></button>
+    <button id="fab-fullscreen" class="fab-btn glass" type="button" aria-label="Toggle fullscreen"><i class="fa-solid fa-expand" aria-hidden="true"></i></button>
+    <button id="fab-top" class="fab-btn glass" type="button" aria-label="Top view"><i class="fa-solid fa-compass" aria-hidden="true"></i></button>
+    <button id="fab-reset" class="fab-btn glass" type="button" aria-label="Reset camera"><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i></button>
+    <button id="fab-zoom-in" class="fab-btn glass" type="button" aria-label="Zoom in"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+    <button id="fab-zoom-out" class="fab-btn glass" type="button" aria-label="Zoom out"><i class="fa-solid fa-minus" aria-hidden="true"></i></button>
+  </div>
+
+  <div id="more-popover" class="glass">
+    <div class="camera-grid" style="grid-template-columns:1fr;">
+      <button class="camera-btn" type="button" data-mode-view="xray"><i class="fa-solid fa-bone text-cyan-300" aria-hidden="true"></i> X-Ray Pipes</button>
+      <button class="camera-btn" type="button" data-mode-view="cadastre"><i class="fa-solid fa-vector-square text-amber-300" aria-hidden="true"></i> Parcel Prism</button>
+      <button class="camera-btn" type="button" data-camera-view="street"><i class="fa-solid fa-road text-slate-300" aria-hidden="true"></i> Street Angle</button>
+      <button class="camera-btn" type="button" data-camera-view="drone"><i class="fa-solid fa-plane-up text-purple-300" aria-hidden="true"></i> Aerial Drone</button>
+    </div>
+  </div>
+
+  <!-- Bottom Center Status / Loading Bar -->
+  <div id="loader-banner" class="glass px-4 py-3 rounded-xl shadow-xl transition-all">
+    <div class="flex items-center gap-3">
+      <div id="loader-spinner" class="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+      <span id="loader-text" class="text-xs font-medium text-white">Loading 3D house model & subsurface utility network...</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="loader-progress"></div></div>
+  </div>
+
+  <!-- Error banner, hidden until something actually fails -->
+  <div id="error-banner" class="glass px-4 py-3 rounded-xl shadow-xl hidden" role="alert">
+    <div class="flex items-center gap-3 justify-between">
+      <span class="text-xs font-medium text-rose-300"><i class="fa-solid fa-triangle-exclamation mr-1.5" aria-hidden="true"></i><span id="error-text">The 3D model could not be loaded.</span></span>
+      <button id="btn-retry" class="mode-btn" style="min-height:32px; padding:4px 10px;" type="button">Retry</button>
+    </div>
+  </div>
+
+  <!-- Viewer Logic -->
+  <script src="web_viewer/static/js/viewer.js"></script>
+</body>
+</html>

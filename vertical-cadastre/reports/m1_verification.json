@@ -1,0 +1,40 @@
+{
+  "milestone": "M1",
+  "status": "PASS",
+  "environment": {
+    "python": true,
+    "open3d": true,
+    "numpy": true,
+    "docker": true
+  },
+  "tests": {
+    "total": 6,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 1,
+    "real_data_validation": "PASS",
+    "status": "PASS"
+  },
+  "real_data_execution": {
+    "dataset": "C:\\Users\\Nihaal S\\OneDrive\\Documents\\3D\\vertical-cadastre\\dataset",
+    "images": 85,
+    "camera": "DJI FC330",
+    "gps": "Available",
+    "odm_status": "SUCCESS",
+    "odm_exit_code": 0,
+    "odm_processing_time": 732.41,
+    "generated_point_cloud": "data\\outputs\\photogrammetry\\job_949b535d\\odm_filterpoints\\point_cloud.ply",
+    "point_cloud_size_bytes": 52144300,
+    "point_count": 1862286,
+    "bounding_box": {
+      "width": 128.13,
+      "depth": 147.76,
+      "height": 41.67
+    },
+    "crs": "NOT GEOREFERENCED",
+    "preprocessing": {
+      "downsampled_points": 1209218,
+      "filtered_points": 1143505
+    }
+  }
+}
